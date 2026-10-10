@@ -3,19 +3,44 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>Portal — Web Browser</title>
+    <title>Portal Web Browser</title>
     <meta name="description" content="A sleek, sandboxed web browser interface with multi-tab navigation, bookmarks, browsing history, and embed diagnostics built for desktop and iPad." />
-    <meta property="og:title" content="Portal — Web Browser" />
+    <meta property="og:title" content="Portal Web Browser" />
     <meta property="og:description" content="A sleek, sandboxed web browser interface with multi-tab navigation, bookmarks, browsing history, and embed diagnostics built for desktop and iPad." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('portal_browser_settings');
+          var theme = 'dark';
+          if (saved) {
+            var parsed = JSON.parse(saved);
+            if (parsed && parsed.theme) {
+              if (parsed.theme === 'light') theme = 'light';
+              else if (parsed.theme === 'dark') theme = 'dark';
+              else if (parsed.theme === 'system') {
+                theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+              }
+            }
+          } else {
+            theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+          }
+          document.documentElement.setAttribute('data-theme', theme);
+          if (theme === 'light') {
+            document.documentElement.classList.add('theme-light');
+          } else {
+            document.documentElement.classList.add('theme-dark');
+          }
+        } catch(e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-[#0f1115] text-slate-100 antialiased selection:bg-emerald-500/25 selection:text-emerald-300 overflow-hidden">
+  <body class="antialiased selection:bg-sky-500/30 selection:text-sky-200 overflow-hidden">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

@@ -5,8 +5,6 @@ import {
   Search,
   ExternalLink,
   Clock,
-  Calendar,
-  AlertCircle,
   Globe,
 } from 'lucide-react';
 import { HistoryItem } from '../types/browser';
@@ -82,14 +80,14 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="history-heading"
-      className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-in fade-in"
+      className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xl animate-in fade-in"
     >
-      <div className="w-full max-w-md h-full bg-[#13161c] border-l border-white/[0.08] flex flex-col text-slate-100 shadow-2xl animate-in slide-in-from-right duration-200">
+      <div className="w-full max-w-md h-full glass-panel border-l border-[var(--border-glass)] flex flex-col text-[var(--text-primary)] shadow-2xl animate-in slide-in-from-right duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/[0.08] bg-[#171a21]">
+        <div className="flex items-center justify-between p-4 border-b border-[var(--border-glass)] bg-white/[0.04]">
           <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-emerald-400" />
-            <h2 id="history-heading" className="text-base font-bold text-white">
+            <Clock className="w-5 h-5 text-sky-400" />
+            <h2 id="history-heading" className="text-base font-bold text-[var(--text-primary)]">
               Browsing History
             </h2>
           </div>
@@ -97,54 +95,38 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close history drawer"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors"
+            className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Search Bar */}
-        <div className="p-3 border-b border-white/[0.06] bg-[#171a21]/50">
-          <div className="relative flex items-center">
-            <Search className="w-4 h-4 text-slate-500 absolute left-3 pointer-events-none" />
+        {/* Search bar */}
+        <div className="p-3 border-b border-[var(--border-glass)]">
+          <div className="relative">
+            <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search history..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-[#0e1014] border border-white/[0.08] text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
+              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-[var(--bg-input)] border border-[var(--border-glass)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-sky-500/70 transition-colors"
             />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 p-0.5 text-slate-400 hover:text-white"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
           </div>
         </div>
 
-        {/* History List Content */}
+        {/* History List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          {history.length === 0 ? (
-            <div className="py-16 text-center text-slate-500 space-y-2">
-              <Clock className="w-8 h-8 mx-auto opacity-30 text-slate-400" />
-              <p className="text-sm">No browsing history yet.</p>
-              <p className="text-xs">Web pages you visit will be logged here.</p>
-            </div>
-          ) : filteredHistory.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 text-xs">
-              No matching pages found for &ldquo;{searchQuery}&rdquo;.
+          {filteredHistory.length === 0 ? (
+            <div className="h-64 flex flex-col items-center justify-center text-center text-[var(--text-muted)] space-y-2">
+              <Clock className="w-8 h-8 opacity-40 text-sky-400" />
+              <p className="text-xs">No browsing history found</p>
             </div>
           ) : (
             <>
-              {/* Today Group */}
               {groupedHistory.today.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" />
+                  <h3 className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
                     Today
                   </h3>
                   <div className="space-y-1">
@@ -154,18 +136,16 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
                         item={item}
                         onNavigate={onNavigate}
                         onOpenInNewTab={onOpenInNewTab}
-                        onDeleteItem={onDeleteItem}
+                        onDelete={onDeleteItem}
                       />
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Yesterday Group */}
               {groupedHistory.yesterday.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" />
+                  <h3 className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
                     Yesterday
                   </h3>
                   <div className="space-y-1">
@@ -175,18 +155,16 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
                         item={item}
                         onNavigate={onNavigate}
                         onOpenInNewTab={onOpenInNewTab}
-                        onDeleteItem={onDeleteItem}
+                        onDelete={onDeleteItem}
                       />
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Earlier Group */}
               {groupedHistory.earlier.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" />
+                  <h3 className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
                     Earlier
                   </h3>
                   <div className="space-y-1">
@@ -196,7 +174,7 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
                         item={item}
                         onNavigate={onNavigate}
                         onOpenInNewTab={onOpenInNewTab}
-                        onDeleteItem={onDeleteItem}
+                        onDelete={onDeleteItem}
                       />
                     ))}
                   </div>
@@ -206,46 +184,41 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
           )}
         </div>
 
-        {/* Footer with Clear All */}
+        {/* Clear All Footer */}
         {history.length > 0 && (
-          <div className="p-3 border-t border-white/[0.08] bg-[#171a21] flex items-center justify-between">
+          <div className="p-3 border-t border-[var(--border-glass)] bg-white/[0.02]">
             {showConfirmClear ? (
-              <div className="flex items-center justify-between w-full gap-2">
-                <span className="text-xs text-rose-300 font-medium">Clear all records?</span>
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-rose-400 font-medium">Clear all history?</span>
+                <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => {
                       onClearAll();
                       setShowConfirmClear(false);
                     }}
-                    className="px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition-colors"
+                    className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold cursor-pointer"
                   >
                     Confirm
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowConfirmClear(false)}
-                    className="px-2.5 py-1 rounded bg-white/[0.08] hover:bg-white/[0.15] text-slate-300 text-xs transition-colors"
+                    className="px-2.5 py-1 rounded-lg bg-white/[0.08] hover:bg-white/[0.12] text-[var(--text-secondary)] cursor-pointer"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              <>
-                <span className="text-xs text-slate-500">
-                  {history.length} {history.length === 1 ? 'item' : 'items'} stored locally
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmClear(true)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 text-xs font-medium transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Clear All History
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={() => setShowConfirmClear(true)}
+                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Clear All History</span>
+              </button>
             )}
           </div>
         )}
@@ -254,28 +227,27 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
   );
 };
 
-const HistoryItemRow: React.FC<{
+interface HistoryItemRowProps {
   item: HistoryItem;
   onNavigate: (url: string) => void;
   onOpenInNewTab: (url: string) => void;
-  onDeleteItem: (id: string) => void;
-}> = ({ item, onNavigate, onOpenInNewTab, onDeleteItem }) => {
+  onDelete: (id: string) => void;
+}
+
+const HistoryItemRow: React.FC<HistoryItemRowProps> = ({
+  item,
+  onNavigate,
+  onOpenInNewTab,
+  onDelete,
+}) => {
+  const domain = extractDomain(item.url);
   const favicon = item.favicon || getFaviconUrl(item.url);
-  const timeString = new Date(item.timestamp).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 
   return (
-    <div className="group flex items-center justify-between p-2 rounded-lg bg-[#171a21] hover:bg-[#1f232c] border border-white/[0.04] transition-colors text-left">
+    <div className="group flex items-center justify-between p-2 rounded-xl hover:bg-white/[0.06] border border-transparent hover:border-[var(--border-glass)] transition-colors">
       <div
-        role="button"
-        tabIndex={0}
-        onClick={() => onNavigate(item.url)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') onNavigate(item.url);
-        }}
         className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer pr-2"
+        onClick={() => onNavigate(item.url)}
       >
         <div className="w-4 h-4 shrink-0 flex items-center justify-center">
           {favicon ? (
@@ -288,40 +260,35 @@ const HistoryItemRow: React.FC<{
               }}
             />
           ) : (
-            <Globe className="w-4 h-4 text-slate-400" />
+            <Globe className="w-4 h-4 text-[var(--text-muted)]" />
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-xs font-medium text-slate-200 group-hover:text-emerald-300 truncate">
-            {item.title || extractDomain(item.url)}
+          <div className="text-xs font-medium text-[var(--text-primary)] truncate group-hover:text-sky-400 transition-colors">
+            {item.title || domain}
           </div>
-          <div className="text-[11px] text-slate-500 truncate font-mono">
-            {item.url}
+          <div className="text-[10px] text-[var(--text-muted)] truncate font-mono">
+            {domain}
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-1 shrink-0">
-        <span className="text-[10px] text-slate-500 tabular-nums mr-1">
-          {timeString}
-        </span>
+      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           type="button"
           onClick={() => onOpenInNewTab(item.url)}
-          aria-label="Open in new tab"
-          className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-emerald-400 transition-opacity"
+          className="p-1 text-[var(--text-muted)] hover:text-sky-400 rounded cursor-pointer"
           title="Open in new tab"
         >
-          <ExternalLink className="w-3 h-3" />
+          <ExternalLink className="w-3.5 h-3.5" />
         </button>
         <button
           type="button"
-          onClick={() => onDeleteItem(item.id)}
-          aria-label="Delete entry"
-          className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-rose-400 transition-opacity"
-          title="Delete from history"
+          onClick={() => onDelete(item.id)}
+          className="p-1 text-[var(--text-muted)] hover:text-rose-400 rounded cursor-pointer"
+          title="Delete history entry"
         >
-          <Trash2 className="w-3 h-3" />
+          <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>

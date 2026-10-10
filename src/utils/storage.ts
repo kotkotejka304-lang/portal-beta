@@ -22,6 +22,9 @@ export const DEFAULT_SETTINGS: BrowserSettings = {
   newTabBehavior: 'welcome',
   enableDiagnostics: true,
   loadTimeoutSeconds: 12,
+  theme: 'dark',
+  favoriteGameIds: ['game-snake', 'game-breakout'],
+  recentlyPlayedGameIds: ['game-snake'],
 };
 
 const DEFAULT_BOOKMARKS: Bookmark[] = [

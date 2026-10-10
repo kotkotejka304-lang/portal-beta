@@ -76,23 +76,18 @@ export const BookmarksModal: React.FC<BookmarksModalProps> = ({
     setIsAdding(false);
   };
 
-  const startEdit = (bm: Bookmark) => {
-    setEditingId(bm.id);
-    setEditTitle(bm.title);
-    setEditUrl(bm.url);
+  const handleStartEdit = (b: Bookmark) => {
+    setEditingId(b.id);
+    setEditTitle(b.title);
+    setEditUrl(b.url);
   };
 
-  const handleEditSave = (id: string) => {
+  const handleSaveEdit = (id: string) => {
     if (!editUrl.trim()) return;
-    let finalUrl = editUrl.trim();
-    if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
-      finalUrl = `https://${finalUrl}`;
-    }
-
     onUpdateBookmark(id, {
-      title: editTitle.trim() || extractDomain(finalUrl),
-      url: finalUrl,
-      favicon: getFaviconUrl(finalUrl),
+      title: editTitle.trim(),
+      url: editUrl.trim(),
+      favicon: getFaviconUrl(editUrl.trim()),
     });
     setEditingId(null);
   };
@@ -101,81 +96,86 @@ export const BookmarksModal: React.FC<BookmarksModalProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      aria-labelledby="bookmarks-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in"
+      aria-labelledby="bookmarks-dialog-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-2xl animate-in fade-in"
     >
-      <div className="w-full max-w-2xl bg-[#13161c] border border-white/[0.1] rounded-2xl flex flex-col text-slate-100 shadow-2xl overflow-hidden max-h-[85vh]">
+      <div className="w-full max-w-xl glass-panel rounded-3xl flex flex-col text-[var(--text-primary)] shadow-2xl overflow-hidden max-h-[85vh]">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/[0.08] bg-[#171a21]">
+        <div className="flex items-center justify-between p-4.5 border-b border-[var(--border-glass)] bg-white/[0.04]">
           <div className="flex items-center gap-2">
-            <Star className="w-5 h-5 text-emerald-400 fill-emerald-400" />
-            <h2 id="bookmarks-modal-title" className="text-base font-bold text-white">
-              Bookmarks Manager
+            <Star className="w-5 h-5 text-amber-400" />
+            <h2 id="bookmarks-dialog-title" className="text-base font-bold text-[var(--text-primary)]">
+              Bookmarks Library
             </h2>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsAdding(!isAdding)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Bookmark</span>
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close bookmarks modal"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close bookmarks library"
+            className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-colors cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Add Bookmark Accordion */}
+        {/* Toolbar (Search & Add) */}
+        <div className="p-3.5 border-b border-[var(--border-glass)] flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search saved bookmarks..."
+              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-[var(--bg-input)] border border-[var(--border-glass)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-sky-500/70 transition-colors"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsAdding(!isAdding)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 text-sky-400 border border-sky-500/30 text-xs font-semibold transition-all shrink-0 cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Bookmark</span>
+          </button>
+        </div>
+
+        {/* Add Bookmark Drawer form */}
         {isAdding && (
           <form
             onSubmit={handleCreateSubmit}
-            className="p-4 bg-[#1a1e27] border-b border-white/[0.08] space-y-3"
+            className="p-4 bg-[var(--bg-input)] border-b border-[var(--border-glass)] space-y-3 animate-in fade-in"
           >
-            <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-              Add New Bookmark
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] text-slate-400 mb-1">Title</label>
-                <input
-                  type="text"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="e.g. OpenStreetMap Explorer"
-                  className="w-full px-3 py-1.5 rounded-lg bg-[#0e1014] border border-white/[0.1] text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] text-slate-400 mb-1">Web Address (URL) *</label>
-                <input
-                  type="text"
-                  required
-                  value={newUrl}
-                  onChange={(e) => setNewUrl(e.target.value)}
-                  placeholder="https://example.org"
-                  className="w-full px-3 py-1.5 rounded-lg bg-[#0e1014] border border-white/[0.1] text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
-                />
-              </div>
+            <div className="text-xs font-bold text-[var(--text-primary)]">Add New Bookmark</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <input
+                type="text"
+                placeholder="Title (optional)"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                className="px-3 py-1.5 rounded-xl bg-white/[0.06] border border-[var(--border-glass)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-sky-500"
+              />
+              <input
+                type="text"
+                placeholder="https://example.com"
+                value={newUrl}
+                onChange={(e) => setNewUrl(e.target.value)}
+                required
+                className="px-3 py-1.5 rounded-xl bg-white/[0.06] border border-[var(--border-glass)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-sky-500 font-mono"
+              />
             </div>
-            <div className="flex items-center justify-end gap-2 pt-1">
+            <div className="flex justify-end gap-2 pt-1">
               <button
                 type="button"
                 onClick={() => setIsAdding(false)}
-                className="px-3 py-1 rounded bg-white/[0.06] hover:bg-white/[0.1] text-xs text-slate-300"
+                className="px-3 py-1 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-lg cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-3.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-semibold"
+                className="px-4 py-1 text-xs font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 rounded-xl transition-all cursor-pointer shadow-sm"
               >
                 Save
               </button>
@@ -183,68 +183,51 @@ export const BookmarksModal: React.FC<BookmarksModalProps> = ({
           </form>
         )}
 
-        {/* Search */}
-        <div className="p-3 border-b border-white/[0.06] bg-[#171a21]/50">
-          <div className="relative flex items-center">
-            <Search className="w-4 h-4 text-slate-500 absolute left-3 pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search saved bookmarks..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-[#0e1014] border border-white/[0.08] text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-        </div>
-
         {/* Bookmarks List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
           {filteredBookmarks.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 text-xs space-y-2">
-              <Star className="w-6 h-6 mx-auto opacity-30 text-slate-400" />
-              <p>No bookmarks found.</p>
+            <div className="h-64 flex flex-col items-center justify-center text-center text-[var(--text-muted)] space-y-2">
+              <Star className="w-8 h-8 opacity-40 text-amber-400" />
+              <p className="text-xs">No bookmarks found</p>
             </div>
           ) : (
             filteredBookmarks.map((bm) => {
-              const isEditing = editingId === bm.id;
               const favicon = bm.favicon || getFaviconUrl(bm.url);
+              const domain = extractDomain(bm.url);
+              const isEditing = editingId === bm.id;
 
               if (isEditing) {
                 return (
                   <div
                     key={bm.id}
-                    className="p-3 rounded-xl bg-[#1b1f28] border border-emerald-500/40 space-y-2"
+                    className="p-3 rounded-2xl bg-[var(--bg-input)] border border-sky-500/40 space-y-2"
                   >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <input
-                        type="text"
-                        value={editTitle}
-                        onChange={(e) => setEditTitle(e.target.value)}
-                        className="px-2 py-1 rounded bg-[#0e1014] border border-white/[0.1] text-xs text-white"
-                        placeholder="Title"
-                      />
-                      <input
-                        type="text"
-                        value={editUrl}
-                        onChange={(e) => setEditUrl(e.target.value)}
-                        className="px-2 py-1 rounded bg-[#0e1014] border border-white/[0.1] text-xs text-white font-mono"
-                        placeholder="URL"
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      className="w-full px-2.5 py-1 text-xs rounded-lg bg-white/[0.06] border border-[var(--border-glass)] text-[var(--text-primary)] focus:outline-none"
+                    />
+                    <input
+                      type="text"
+                      value={editUrl}
+                      onChange={(e) => setEditUrl(e.target.value)}
+                      className="w-full px-2.5 py-1 text-xs rounded-lg bg-white/[0.06] border border-[var(--border-glass)] text-[var(--text-primary)] focus:outline-none font-mono"
+                    />
                     <div className="flex justify-end gap-2">
                       <button
                         type="button"
                         onClick={() => setEditingId(null)}
-                        className="px-2.5 py-0.5 rounded text-xs bg-white/[0.06] text-slate-300"
+                        className="px-2 py-0.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
                       >
                         Cancel
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleEditSave(bm.id)}
-                        className="px-2.5 py-0.5 rounded text-xs bg-emerald-500 text-slate-950 font-semibold"
+                        onClick={() => handleSaveEdit(bm.id)}
+                        className="px-3 py-0.5 text-xs font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 rounded-lg cursor-pointer"
                       >
-                        Save
+                        Done
                       </button>
                     </div>
                   </div>
@@ -254,24 +237,16 @@ export const BookmarksModal: React.FC<BookmarksModalProps> = ({
               return (
                 <div
                   key={bm.id}
-                  className="group flex items-center justify-between p-3 rounded-xl bg-[#171a21] hover:bg-[#1b1f28] border border-white/[0.05] hover:border-emerald-500/30 transition-all text-left"
+                  className="group flex items-center justify-between p-2.5 rounded-2xl hover:bg-white/[0.06] border border-transparent hover:border-[var(--border-glass)] transition-colors"
                 >
                   <div
-                    role="button"
-                    tabIndex={0}
+                    className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer pr-2"
                     onClick={() => {
                       onNavigate(bm.url);
                       onClose();
                     }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        onNavigate(bm.url);
-                        onClose();
-                      }
-                    }}
-                    className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer pr-3"
                   >
-                    <div className="w-5 h-5 shrink-0 flex items-center justify-center">
+                    <div className="w-4 h-4 shrink-0 flex items-center justify-center">
                       {favicon ? (
                         <img
                           src={favicon}
@@ -282,35 +257,43 @@ export const BookmarksModal: React.FC<BookmarksModalProps> = ({
                           }}
                         />
                       ) : (
-                        <Globe className="w-4 h-4 text-slate-400" />
+                        <Globe className="w-4 h-4 text-[var(--text-muted)]" />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-xs font-semibold text-slate-200 group-hover:text-emerald-300 truncate">
-                        {bm.title || extractDomain(bm.url)}
+                      <div className="text-xs font-medium text-[var(--text-primary)] truncate group-hover:text-sky-400 transition-colors">
+                        {bm.title || domain}
                       </div>
-                      <div className="text-[11px] text-slate-500 truncate font-mono">
+                      <div className="text-[10px] text-[var(--text-muted)] truncate font-mono">
                         {bm.url}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       type="button"
-                      onClick={() => startEdit(bm)}
-                      aria-label="Edit bookmark"
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/[0.08] transition-colors"
-                      title="Edit Bookmark"
+                      onClick={() => handleStartEdit(bm)}
+                      className="p-1 text-[var(--text-muted)] hover:text-sky-400 rounded cursor-pointer"
+                      title="Edit bookmark"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
                     <button
                       type="button"
+                      onClick={() => {
+                        window.open(bm.url, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="p-1 text-[var(--text-muted)] hover:text-sky-400 rounded cursor-pointer"
+                      title="Open in new native tab"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => onDeleteBookmark(bm.id)}
-                      aria-label="Delete bookmark"
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                      title="Delete Bookmark"
+                      className="p-1 text-[var(--text-muted)] hover:text-rose-400 rounded cursor-pointer"
+                      title="Delete bookmark"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -322,9 +305,14 @@ export const BookmarksModal: React.FC<BookmarksModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-white/[0.08] bg-[#171a21] text-xs text-slate-500 flex items-center justify-between">
-          <span>{bookmarks.length} saved bookmarks</span>
-          <span>Click any item to navigate</span>
+        <div className="p-3 border-t border-[var(--border-glass)] bg-white/[0.04] flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold transition-all cursor-pointer shadow-sm"
+          >
+            Done
+          </button>
         </div>
       </div>
     </div>

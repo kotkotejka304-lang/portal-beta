@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Tab, Bookmark, HistoryItem, BrowserSettings, SearchEngine } from './types/browser';
+import { Tab, Bookmark, HistoryItem, BrowserSettings, SearchEngine, ThemePreference } from './types/browser';
 import {
   getSavedBookmarks,
   saveBookmarks,
@@ -92,6 +92,43 @@ export default function App() {
     saveSettings(settings);
   }, [settings]);
 
+  // Real-time Theme Management (Light / Dark / System mode reactivity)
+  useEffect(() => {
+    const applyTheme = () => {
+      let resolved: 'light' | 'dark' = 'dark';
+      if (settings.theme === 'light') {
+        resolved = 'light';
+      } else if (settings.theme === 'dark') {
+        resolved = 'dark';
+      } else {
+        // System preference
+        resolved = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      }
+
+      document.documentElement.setAttribute('data-theme', resolved);
+      if (resolved === 'light') {
+        document.documentElement.classList.add('theme-light');
+        document.documentElement.classList.remove('theme-dark');
+        document.body.classList.add('theme-light');
+        document.body.classList.remove('theme-dark');
+      } else {
+        document.documentElement.classList.add('theme-dark');
+        document.documentElement.classList.remove('theme-light');
+        document.body.classList.add('theme-dark');
+        document.body.classList.remove('theme-light');
+      }
+    };
+
+    applyTheme();
+
+    if (settings.theme === 'system') {
+      const media = window.matchMedia('(prefers-color-scheme: light)');
+      const listener = () => applyTheme();
+      media.addEventListener('change', listener);
+      return () => media.removeEventListener('change', listener);
+    }
+  }, [settings.theme]);
+
   // Navigation logic
   const handleNavigate = useCallback(
     (input: string) => {
@@ -124,6 +161,16 @@ export default function App() {
                 favicon: getFaviconUrl(targetUrl),
               })
             );
+          }
+
+          // Track game in recently played
+          if (targetUrl.includes('portal://game/')) {
+            const gamePart = targetUrl.split('portal://game/')[1];
+            const gameId = `game-${gamePart}`;
+            setSettings((prev) => {
+              const recents = (prev.recentlyPlayedGameIds || []).filter((id) => id !== gameId);
+              return { ...prev, recentlyPlayedGameIds: [gameId, ...recents].slice(0, 10) };
+            });
           }
 
           return {
@@ -160,7 +207,6 @@ export default function App() {
 
       setTabs((prevTabs) => {
         if (prevTabs.length <= 1) {
-          // If closing the only tab, reset it to Portal Home instead of blanking out
           const resetTab = createInitialTab();
           setActiveTabId(resetTab.id);
           return [resetTab];
@@ -168,7 +214,6 @@ export default function App() {
 
         const remaining = prevTabs.filter((t) => t.id !== tabIdToClose);
 
-        // If closing active tab, switch to adjacent tab
         if (tabIdToClose === activeTabId) {
           const closedIndex = prevTabs.findIndex((t) => t.id === tabIdToClose);
           const nextIndex = Math.max(0, closedIndex - 1);
@@ -234,7 +279,6 @@ export default function App() {
     setTabs((prevTabs) =>
       prevTabs.map((tab) => {
         if (tab.id !== activeTabId) return tab;
-        // Force reload by re-triggering loading state
         return {
           ...tab,
           isLoading: !tab.url.startsWith('portal://'),
@@ -305,6 +349,16 @@ export default function App() {
     setBookmarks((prev) => prev.filter((b) => b.id !== id));
   }, []);
 
+  const handleToggleFavoriteGame = useCallback((gameId: string) => {
+    setSettings((prev) => {
+      const favorites = prev.favoriteGameIds || [];
+      const updated = favorites.includes(gameId)
+        ? favorites.filter((id) => id !== gameId)
+        : [...favorites, gameId];
+      return { ...prev, favoriteGameIds: updated };
+    });
+  }, []);
+
   // History drawer handlers
   const handleDeleteHistoryItem = useCallback((id: string) => {
     setHistory((prev) => deleteSavedHistoryItem(id));
@@ -333,7 +387,6 @@ export default function App() {
   // Keyboard shortcut listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't intercept shortcuts if typing inside an input/textarea
       const target = e.target as HTMLElement;
       const isInput =
         target.tagName === 'INPUT' ||
@@ -390,15 +443,15 @@ export default function App() {
 
   return (
     <div
-      className={`w-screen h-screen overflow-hidden flex flex-col bg-[#0f1115] text-slate-100 ${
-        isIpadEmulation ? 'p-3 sm:p-6 bg-[#08090b] flex items-center justify-center' : ''
+      className={`w-screen h-screen overflow-hidden flex flex-col bg-[var(--bg-main)] text-[var(--text-primary)] transition-colors duration-250 ${
+        isIpadEmulation ? 'p-3 sm:p-6 bg-black/70 flex items-center justify-center' : ''
       }`}
     >
-      {/* Outer Shell container (supports iPad mockup mode if toggled) */}
+      {/* Outer Shell container (supports 11-inch iPad mockup mode) */}
       <div
-        className={`w-full h-full flex flex-col overflow-hidden bg-[#0f1115] ${
+        className={`w-full h-full flex flex-col overflow-hidden bg-[var(--bg-main)] ${
           isIpadEmulation
-            ? 'max-w-[1024px] max-h-[768px] rounded-3xl border-8 border-[#222631] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative'
+            ? 'max-w-[1194px] max-h-[834px] rounded-3xl border-8 border-slate-700/60 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] relative'
             : ''
         }`}
       >
@@ -411,13 +464,14 @@ export default function App() {
           onNewTab={() => handleNewTab()}
         />
 
-        {/* Navigation & Omnibox Toolbar */}
+        {/* Navigation & Omnibox Toolbar with Real Theme Switcher */}
         <NavigationToolbar
           activeTab={activeTab}
           canGoBack={canGoBack}
           canGoForward={canGoForward}
           isBookmarked={isCurrentBookmarked}
           showBookmarksBar={settings.showBookmarksBar}
+          theme={settings.theme}
           onNavigate={handleNavigate}
           onBack={handleBack}
           onForward={handleForward}
@@ -426,6 +480,9 @@ export default function App() {
           onToggleBookmark={handleToggleBookmark}
           onToggleBookmarksBar={() =>
             handleUpdateSettings({ showBookmarksBar: !settings.showBookmarksBar })
+          }
+          onSetTheme={(themePreference: ThemePreference) =>
+            handleUpdateSettings({ theme: themePreference })
           }
           onOpenHistory={() => setIsHistoryOpen(true)}
           onOpenSettings={() => setIsSettingsOpen(true)}
@@ -467,6 +524,7 @@ export default function App() {
             }
             onOpenSecurityInfo={() => setIsSecurityInfoOpen(true)}
             onUpdateTabState={handleUpdateTabState}
+            onToggleFavoriteGame={handleToggleFavoriteGame}
           />
         </main>
       </div>

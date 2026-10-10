@@ -53,6 +53,35 @@ const KNOWN_BLOCKED_DOMAINS = [
   'bankofamerica.com',
   'chase.com',
   'wellsfargo.com',
+  // Popular gaming providers enforcing X-Frame-Options or CSP frame-ancestors
+  'poki.com',
+  'crazygames.com',
+  'coolmathgames.com',
+  'chess.com',
+  'lichess.org',
+  'sudoku.com',
+  'slither.io',
+  'agar.io',
+  'paper-io.com',
+  'hole-io.com',
+  'smashkarts.io',
+  'tetris.com',
+  'chromedino.com',
+  'linerider.com',
+  'skribbl.io',
+  'gartic.io',
+  'bonk.io',
+  'itch.io',
+  'newgrounds.com',
+  'armorgames.com',
+  'kongregate.com',
+  'miniplay.com',
+  'y8.com',
+  'silvergames.com',
+  'mathplayground.com',
+  'geoguessr.com',
+  'krunker.io',
+  'growden.io',
 ];
 
 // Curated embed-friendly or educational sites
@@ -253,7 +282,17 @@ export function resolveInputToUrl(
  */
 export function extractDomain(url: string): string {
   if (!url || url.startsWith('portal://')) {
-    if (url === 'portal://welcome') return 'Portal Home';
+    if (url === 'portal://welcome' || url === 'portal://home') return 'Portal Home';
+    if (url === 'portal://games') return 'Portal Arcade';
+    if (url === 'portal://game/snake') return 'Cyber Snake';
+    if (url === 'portal://game/breakout') return 'Liquid Breakout';
+    if (url === 'portal://game/2048') return 'Quantum 2048';
+    if (url === 'portal://game/orbital') return 'Orbital Defender';
+    if (url === 'portal://game/reflex') return 'Glass Reflex';
+    if (url === 'portal://game/minesweeper') return 'Neon Minesweeper';
+    if (url === 'portal://game/sliding') return 'Liquid 15 Puzzle';
+    if (url === 'portal://game/connect4') return 'Quantum Four';
+    if (url === 'portal://game/reaction') return 'Chrono Reaction';
     if (url === 'portal://history') return 'History';
     if (url === 'portal://bookmarks') return 'Bookmarks';
     if (url === 'portal://settings') return 'Settings';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   ExternalLink,
   ShieldAlert,
@@ -12,12 +12,23 @@ import {
   Info,
   Globe,
   Clock,
-  Settings as SettingsIcon,
+  Play,
+  Sparkles,
 } from 'lucide-react';
 import { Bookmark, BrowserSettings, HistoryItem, SearchEngine, Tab } from '../types/browser';
 import { checkKnownEmbedRestrictions, extractDomain } from '../utils/url';
+import { ALL_GAMES, getAlternateEmbeddableUrl } from '../utils/games';
 import { WelcomePage } from './WelcomePage';
 import { TestPages } from './TestPages';
+import { SnakeGame } from './games/SnakeGame';
+import { BreakoutGame } from './games/BreakoutGame';
+import { Game2048 } from './games/Game2048';
+import { OrbitalGame } from './games/OrbitalGame';
+import { ReflexGame } from './games/ReflexGame';
+import { MinesweeperGame } from './games/MinesweeperGame';
+import { SlidingGame } from './games/SlidingGame';
+import { ConnectFourGame } from './games/ConnectFourGame';
+import { ReactionGame } from './games/ReactionGame';
 
 interface WebViewProps {
   activeTab: Tab;
@@ -31,6 +42,7 @@ interface WebViewProps {
   onSearchEngineChange: (engine: SearchEngine) => void;
   onOpenSecurityInfo: () => void;
   onUpdateTabState: (tabId: string, updates: Partial<Tab>) => void;
+  onToggleFavoriteGame?: (gameId: string) => void;
 }
 
 export const WebView: React.FC<WebViewProps> = ({
@@ -45,6 +57,7 @@ export const WebView: React.FC<WebViewProps> = ({
   onSearchEngineChange,
   onOpenSecurityInfo,
   onUpdateTabState,
+  onToggleFavoriteGame,
 }) => {
   const [copied, setCopied] = useState(false);
   const [loadTimedOut, setLoadTimedOut] = useState(false);
@@ -59,6 +72,11 @@ export const WebView: React.FC<WebViewProps> = ({
     ? checkKnownEmbedRestrictions(activeTab.url)
     : { isLikelyBlocked: false };
 
+  const alternateEmbed = useMemo(
+    () => (!isInternal ? getAlternateEmbeddableUrl(activeTab.url) : null),
+    [activeTab.url, isInternal]
+  );
+
   const timeoutDuration = (settings.loadTimeoutSeconds || 12) * 1000;
 
   // Reset restriction bypass and timeout when URL changes
@@ -67,6 +85,17 @@ export const WebView: React.FC<WebViewProps> = ({
     setLoadTimedOut(false);
     setElapsedSeconds(0);
   }, [activeTab.url]);
+
+  // Auto-bypass: when "cannot display in frame" restriction is detected,
+  // automatically press "Try Frame Anyway" so the iframe is mounted immediately without blocking the user
+  useEffect(() => {
+    if (embedRestriction.isLikelyBlocked && !userBypassedRestriction) {
+      const autoTryTimer = setTimeout(() => {
+        setUserBypassedRestriction(true);
+      }, 300);
+      return () => clearTimeout(autoTryTimer);
+    }
+  }, [embedRestriction.isLikelyBlocked, userBypassedRestriction]);
 
   // Handle iframe load detection, seconds counter, and configurable timeout
   useEffect(() => {
@@ -132,7 +161,6 @@ export const WebView: React.FC<WebViewProps> = ({
       clearInterval(secondsTimerRef.current);
     }
     setLoadTimedOut(false);
-    // Conclude loading truthfully without claiming remote content verification
     onUpdateTabState(activeTab.id, { isLoading: false });
   };
 
@@ -149,7 +177,7 @@ export const WebView: React.FC<WebViewProps> = ({
 
   const handleRetry = () => {
     setLoadTimedOut(false);
-    setUserBypassedRestriction(false);
+    setUserBypassedRestriction(true);
     setElapsedSeconds(0);
     onReload();
   };
@@ -198,37 +226,69 @@ export const WebView: React.FC<WebViewProps> = ({
     .join(' ');
 
   // 1. Internal Pages Routing
-  if (activeTab.url === 'portal://welcome' || activeTab.url === 'portal://home') {
+  if (
+    activeTab.url === 'portal://welcome' ||
+    activeTab.url === 'portal://home' ||
+    activeTab.url === 'portal://games'
+  ) {
     return (
       <WelcomePage
         recentHistory={recentHistory}
         bookmarks={bookmarks}
         defaultSearchEngine={settings.defaultSearchEngine}
+        favoriteGameIds={settings.favoriteGameIds}
+        recentlyPlayedGameIds={settings.recentlyPlayedGameIds}
         onNavigate={onNavigate}
         onSearchEngineChange={onSearchEngineChange}
         onOpenSecurityInfo={onOpenSecurityInfo}
+        onToggleFavoriteGame={onToggleFavoriteGame}
       />
     );
+  }
+
+  // Built-in Games Routes
+  if (activeTab.url === 'portal://game/snake') {
+    return <SnakeGame onExit={() => onNavigate('portal://games')} />;
+  }
+
+  if (activeTab.url === 'portal://game/breakout') {
+    return <BreakoutGame onExit={() => onNavigate('portal://games')} />;
+  }
+
+  if (activeTab.url === 'portal://game/2048') {
+    return <Game2048 onExit={() => onNavigate('portal://games')} />;
+  }
+
+  if (activeTab.url === 'portal://game/orbital') {
+    return <OrbitalGame onExit={() => onNavigate('portal://games')} />;
+  }
+
+  if (activeTab.url === 'portal://game/reflex') {
+    return <ReflexGame onExit={() => onNavigate('portal://games')} />;
+  }
+
+  if (activeTab.url === 'portal://game/minesweeper') {
+    return <MinesweeperGame onExit={() => onNavigate('portal://games')} />;
+  }
+
+  if (activeTab.url === 'portal://game/sliding') {
+    return <SlidingGame onExit={() => onNavigate('portal://games')} />;
+  }
+
+  if (activeTab.url === 'portal://game/connect4') {
+    return <ConnectFourGame onExit={() => onNavigate('portal://games')} />;
+  }
+
+  if (activeTab.url === 'portal://game/reaction') {
+    return <ReactionGame onExit={() => onNavigate('portal://games')} />;
   }
 
   if (activeTab.url === 'portal://test-blocked') {
-    return (
-      <TestPages
-        type="blocked"
-        onNavigate={onNavigate}
-        onBack={onBack}
-      />
-    );
+    return <TestPages type="blocked" onNavigate={onNavigate} onBack={onBack} />;
   }
 
   if (activeTab.url === 'portal://test-embeddable') {
-    return (
-      <TestPages
-        type="embeddable"
-        onNavigate={onNavigate}
-        onBack={onBack}
-      />
-    );
+    return <TestPages type="embeddable" onNavigate={onNavigate} onBack={onBack} />;
   }
 
   // 2. Unified Portal Error Screen Template
@@ -244,61 +304,61 @@ export const WebView: React.FC<WebViewProps> = ({
     showBypass?: boolean;
   }) => {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 bg-[#0f1115] text-slate-100 text-center z-10 overflow-y-auto">
-        <div className="max-w-xl w-full p-6 sm:p-8 rounded-2xl bg-[#171a21] border border-white/[0.08] shadow-2xl space-y-6 text-left">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 bg-[var(--bg-main)] text-[var(--text-primary)] text-center z-10 overflow-y-auto">
+        <div className="max-w-xl w-full p-6 sm:p-8 rounded-3xl glass-panel border border-[var(--border-glass)] shadow-2xl space-y-6 text-left">
           {/* Header & Status Badge */}
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0">
               <ShieldAlert className="w-6 h-6" />
             </div>
             <div className="space-y-1 min-w-0 flex-1">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 mb-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/30 mb-1">
                 <span>{config.badgeText}</span>
               </div>
-              <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+              <h2 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] tracking-tight">
                 {config.title}
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[var(--text-secondary)]">
                 {config.subtitle}
               </p>
             </div>
           </div>
 
           {/* Original URL Display Box */}
-          <div className="space-y-1.5 bg-[#0e1014] p-3.5 rounded-xl border border-white/[0.06]">
-            <div className="flex items-center justify-between text-[11px] text-slate-400">
-              <span className="font-medium text-slate-300 flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5 text-emerald-400" />
+          <div className="space-y-1.5 bg-[var(--bg-input)] p-3.5 rounded-2xl border border-[var(--border-glass)]">
+            <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
+              <span className="font-medium text-[var(--text-primary)] flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-sky-400" />
                 Original Destination Address
               </span>
               <button
                 type="button"
                 onClick={handleCopyUrl}
-                className="text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1 text-[11px]"
+                className="text-[var(--text-secondary)] hover:text-sky-400 transition-colors flex items-center gap-1 text-[11px] cursor-pointer"
               >
-                {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                {copied ? <Check className="w-3 h-3 text-sky-400" /> : <Copy className="w-3 h-3" />}
                 <span>{copied ? 'Copied' : 'Copy Address'}</span>
               </button>
             </div>
-            <div className="text-xs font-mono text-emerald-400 break-all select-all pt-0.5">
+            <div className="text-xs font-mono text-sky-400 break-all select-all pt-0.5">
               {activeTab.url}
             </div>
           </div>
 
           {/* Explanation & Technical Breakdown */}
-          <div className="space-y-2.5 text-xs text-slate-300 leading-relaxed bg-[#12151c] p-4 rounded-xl border border-white/[0.06]">
-            <p className="font-semibold text-slate-200">
+          <div className="space-y-2.5 text-xs text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-surface-glass)] p-4 rounded-2xl border border-[var(--border-glass)]">
+            <p className="font-semibold text-[var(--text-primary)]">
               Diagnostic Analysis
             </p>
-            <p className="text-slate-400">
+            <p className="text-[var(--text-secondary)]">
               {config.explanation}
             </p>
 
             {config.diagnosticPoints && (
-              <ul className="space-y-1.5 text-slate-300 text-[11px] pt-1">
+              <ul className="space-y-1.5 text-[var(--text-secondary)] text-[11px] pt-1">
                 {config.diagnosticPoints.map((point, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="text-emerald-400 font-bold">•</span>
+                    <span className="text-sky-400 font-bold">•</span>
                     <span>{point}</span>
                   </li>
                 ))}
@@ -306,14 +366,42 @@ export const WebView: React.FC<WebViewProps> = ({
             )}
 
             {config.headerDetails && (
-              <div className="p-2.5 rounded-lg bg-black/40 border border-white/[0.04] space-y-1 font-mono text-[11px] mt-2">
-                <div className="text-emerald-400 font-medium">Headers Enforced by Server:</div>
+              <div className="p-2.5 rounded-xl bg-black/20 border border-[var(--border-glass)] space-y-1 font-mono text-[11px] mt-2">
+                <div className="text-sky-400 font-medium">Headers Enforced by Server:</div>
                 {config.headerDetails.map((header) => (
-                  <div key={header} className="text-slate-400">• {header}</div>
+                  <div key={header} className="text-[var(--text-muted)]">• {header}</div>
                 ))}
               </div>
             )}
           </div>
+
+          {/* Smart In-Frame Alternative (if available) */}
+          {alternateEmbed && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-sky-500/15 border border-sky-400/50 shadow-[0_0_30px_rgba(56,189,248,0.2)] space-y-3 animate-in fade-in">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-sky-400 font-bold text-xs sm:text-sm">
+                  <Sparkles className="w-4 h-4 text-sky-400 shrink-0" />
+                  Verified In-Frame Play Available!
+                </span>
+                {alternateEmbed.badge && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/25 text-sky-300 border border-sky-500/40">
+                    {alternateEmbed.badge}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                {alternateEmbed.note}
+              </p>
+              <button
+                type="button"
+                onClick={() => onNavigate(alternateEmbed.url)}
+                className="w-full py-3 px-4 rounded-xl bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-sky-500/30 cursor-pointer transition-all active:scale-98"
+              >
+                <Play className="w-4 h-4 fill-current" />
+                <span>Play {alternateEmbed.title} (In-Frame)</span>
+              </button>
+            </div>
+          )}
 
           {/* Primary Action: Open in New Tab */}
           {config.showOpenExternal !== false && (
@@ -321,13 +409,13 @@ export const WebView: React.FC<WebViewProps> = ({
               <button
                 type="button"
                 onClick={handleOpenExternal}
-                className="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-slate-950 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-emerald-500/20"
+                className="w-full py-3 px-4 rounded-2xl bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-slate-950 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-sky-500/25 cursor-pointer"
               >
                 <ExternalLink className="w-4 h-4" />
                 <span>Open in New Tab</span>
               </button>
-              <div className="flex items-start gap-1.5 px-1 text-[11px] text-slate-400">
-                <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-1.5 px-1 text-[11px] text-[var(--text-muted)]">
+                <Info className="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5" />
                 <span>
                   <strong>Notice:</strong> This uses the original URL ({extractDomain(activeTab.url)}) and opens it in a separate native browser window outside Portal where in-page iframe restrictions do not apply.
                 </span>
@@ -336,34 +424,34 @@ export const WebView: React.FC<WebViewProps> = ({
           )}
 
           {/* Secondary Controls Bar (Retry, Back, Home, Extend Timeout, Bypass) */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/[0.06]">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[var(--border-glass)]">
             <button
               type="button"
               onClick={handleRetry}
-              className="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-[var(--text-primary)] text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
               title="Retry loading this page"
             >
-              <RotateCw className="w-3.5 h-3.5 text-emerald-400" />
+              <RotateCw className="w-3.5 h-3.5 text-sky-400" />
               <span>Retry</span>
             </button>
 
             <button
               type="button"
               onClick={onBack}
-              className="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-[var(--text-primary)] text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
               title="Go back to previous page"
             >
-              <ArrowLeft className="w-3.5 h-3.5 text-emerald-400" />
+              <ArrowLeft className="w-3.5 h-3.5 text-sky-400" />
               <span>Back</span>
             </button>
 
             <button
               type="button"
               onClick={onHome}
-              className="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-[var(--text-primary)] text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
               title="Return to Portal Home"
             >
-              <Home className="w-3.5 h-3.5 text-emerald-400" />
+              <Home className="w-3.5 h-3.5 text-sky-400" />
               <span>Home</span>
             </button>
 
@@ -371,7 +459,7 @@ export const WebView: React.FC<WebViewProps> = ({
               <button
                 type="button"
                 onClick={handleExtendTimeout}
-                className="px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold transition-colors flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
                 title="Wait an extra 12 seconds for slow servers"
               >
                 <Clock className="w-3.5 h-3.5" />
@@ -383,10 +471,11 @@ export const WebView: React.FC<WebViewProps> = ({
               <button
                 type="button"
                 onClick={() => setUserBypassedRestriction(true)}
-                className="ml-auto text-[11px] text-slate-500 hover:text-slate-300 underline transition-colors"
+                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 border border-sky-500/40 text-xs font-semibold transition-all cursor-pointer animate-pulse"
                 title="Attempts to mount the raw iframe in the DOM"
               >
-                Try Frame Anyway
+                <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Try Frame Anyway (Auto-Triggering...)</span>
               </button>
             )}
           </div>
@@ -428,7 +517,7 @@ export const WebView: React.FC<WebViewProps> = ({
     });
   }
 
-  // 5. Connection Timeout Screen (e.g. slow networks, latency, Cloudflare challenge, or slow DNS)
+  // 5. Connection Timeout Screen
   if (loadTimedOut) {
     return renderPortalErrorScreen({
       badgeText: `Connection Timeout (${settings.loadTimeoutSeconds || 12}s)`,
@@ -450,18 +539,18 @@ export const WebView: React.FC<WebViewProps> = ({
 
   // 6. Active External Sandboxed Iframe Container
   return (
-    <div className="relative flex-1 w-full h-full flex flex-col bg-[#0f1115] overflow-hidden">
+    <div className="relative flex-1 w-full h-full flex flex-col bg-[var(--bg-main)] overflow-hidden">
       {/* Top Animated Progress Bar */}
       {activeTab.isLoading && (
         <div className="absolute top-0 left-0 right-0 z-30 h-1 bg-white/[0.05] overflow-hidden">
-          <div className="h-full bg-emerald-400 animate-pulse w-3/4 transition-all duration-300" />
+          <div className="h-full bg-sky-400 animate-pulse w-3/4 transition-all duration-300" />
         </div>
       )}
 
       {/* Floating Loading Indicator with Elapsed Seconds */}
       {activeTab.isLoading && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 rounded-full bg-[#171a21]/95 backdrop-blur-md border border-white/[0.1] shadow-lg flex items-center gap-2 text-xs text-slate-300 animate-in fade-in">
-          <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 px-3.5 py-1.5 rounded-full glass-panel shadow-lg flex items-center gap-2 text-xs text-[var(--text-primary)] animate-in fade-in">
+          <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-400" />
           <span>
             Connecting to {extractDomain(activeTab.url)} ({elapsedSeconds}s)
           </span>
@@ -469,7 +558,7 @@ export const WebView: React.FC<WebViewProps> = ({
             <button
               type="button"
               onClick={handleOpenExternal}
-              className="ml-1 text-[11px] text-emerald-400 hover:underline flex items-center gap-1 font-semibold"
+              className="ml-1 text-[11px] text-sky-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
             >
               <ExternalLink className="w-3 h-3" />
               <span>Open in New Tab</span>
@@ -492,9 +581,9 @@ export const WebView: React.FC<WebViewProps> = ({
       />
 
       {/* Bottom Embed Status & External Launch Bar */}
-      <footer className="shrink-0 px-3 py-1.5 bg-[#13161c] border-t border-white/[0.08] flex items-center justify-between text-xs text-slate-400 select-none">
+      <footer className="shrink-0 px-3 py-1.5 glass-toolbar border-t border-[var(--border-glass)] flex items-center justify-between text-xs text-[var(--text-secondary)] select-none">
         <div className="flex items-center gap-2 truncate pr-2">
-          <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+          <Info className="w-3.5 h-3.5 text-sky-400 shrink-0" />
           <span className="truncate text-[11px]">
             Sandboxed Frame ({settings.loadTimeoutSeconds || 12}s timeout) · If content is blank or slow, use Open in New Tab.
           </span>
@@ -504,7 +593,7 @@ export const WebView: React.FC<WebViewProps> = ({
           <button
             type="button"
             onClick={handleOpenExternal}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-semibold transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[11px] font-semibold transition-colors cursor-pointer"
             title="Open destination in native browser tab outside Portal"
           >
             <ExternalLink className="w-3 h-3" />
@@ -513,7 +602,7 @@ export const WebView: React.FC<WebViewProps> = ({
           <button
             type="button"
             onClick={handleRetry}
-            className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors"
+            className="p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-colors cursor-pointer"
             title="Reload Frame"
           >
             <RotateCw className="w-3 h-3" />

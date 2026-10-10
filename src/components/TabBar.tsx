@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, X, Globe, Compass, Loader2 } from 'lucide-react';
+import { Plus, X, Globe, Compass, Loader2, Gamepad2 } from 'lucide-react';
 import { Tab } from '../types/browser';
 
 interface TabBarProps {
@@ -21,12 +21,13 @@ export const TabBar: React.FC<TabBarProps> = ({
     <div
       role="tablist"
       aria-label="Browser Tabs"
-      className="flex items-center gap-1 px-2 pt-2 bg-[#0d0f13] border-b border-white/[0.06] select-none overflow-x-auto no-scrollbar"
+      className="flex items-center gap-1.5 px-3 pt-2.5 pb-1.5 glass-toolbar border-b border-[var(--border-glass)] select-none overflow-x-auto no-scrollbar relative z-20"
     >
-      <div className="flex items-center gap-1 flex-1 min-w-0">
+      <div className="flex items-center gap-1.5 flex-1 min-w-0">
         {tabs.map((tab) => {
           const isActive = tab.id === activeTabId;
           const isInternal = tab.url.startsWith('portal://');
+          const isGame = tab.url.includes('portal://game') || tab.url === 'portal://games';
 
           return (
             <div
@@ -41,23 +42,25 @@ export const TabBar: React.FC<TabBarProps> = ({
                   onSelectTab(tab.id);
                 }
               }}
-              className={`group relative flex items-center min-w-[120px] max-w-[220px] flex-1 h-9 px-3 rounded-t-lg text-xs font-medium cursor-pointer transition-all duration-150 outline-none ${
+              className={`group relative flex items-center min-w-[130px] max-w-[230px] flex-1 h-9 px-3 rounded-xl text-xs font-medium cursor-pointer transition-all duration-200 outline-none ${
                 isActive
-                  ? 'bg-[#171a21] text-slate-100 shadow-[0_-2px_10px_rgba(0,0,0,0.25)] border-t border-x border-white/[0.08]'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
+                  ? 'bg-white/[0.12] dark:bg-white/[0.1] text-[var(--text-primary)] shadow-[0_4px_16px_rgba(0,0,0,0.15),inset_0_1px_0_var(--specular-line)] border border-[var(--border-glass-shine)]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/[0.06] border border-transparent'
               }`}
             >
-              {/* Tab active accent indicator */}
+              {/* Active Tab Blue Glow Edge */}
               {isActive && (
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-emerald-500 rounded-t" />
+                <div className="absolute -bottom-1.5 left-3 right-3 h-[2px] bg-sky-400 rounded-full shadow-[0_0_10px_rgba(56,189,248,0.9)]" />
               )}
 
               {/* Favicon or Icon */}
-              <div className="mr-2 shrink-0 flex items-center justify-center w-4 h-4 text-slate-400">
+              <div className="mr-2 shrink-0 flex items-center justify-center w-4 h-4 text-[var(--text-muted)]">
                 {tab.isLoading ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-400" />
+                ) : isGame ? (
+                  <Gamepad2 className="w-3.5 h-3.5 text-sky-400" />
                 ) : isInternal ? (
-                  <Compass className="w-3.5 h-3.5 text-emerald-400" />
+                  <Compass className="w-3.5 h-3.5 text-sky-400" />
                 ) : tab.favicon ? (
                   <img
                     src={tab.favicon}
@@ -68,7 +71,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                     }}
                   />
                 ) : (
-                  <Globe className="w-3.5 h-3.5 text-slate-400" />
+                  <Globe className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                 )}
               </div>
 
@@ -77,12 +80,12 @@ export const TabBar: React.FC<TabBarProps> = ({
                 {tab.title || (tab.url.startsWith('portal://') ? 'Portal Home' : 'Untitled')}
               </span>
 
-              {/* Close Button (iPad & Touch friendly >= 24px inner target) */}
+              {/* Close Button */}
               <button
                 type="button"
                 aria-label={`Close tab ${tab.title}`}
                 onClick={(e) => onCloseTab(tab.id, e)}
-                className={`p-1 rounded-md text-slate-400 hover:text-slate-100 hover:bg-white/10 transition-colors shrink-0 ${
+                className={`p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/10 transition-colors shrink-0 ${
                   isActive ? 'opacity-90' : 'opacity-0 group-hover:opacity-100 focus:opacity-100'
                 }`}
               >
@@ -98,7 +101,7 @@ export const TabBar: React.FC<TabBarProps> = ({
         type="button"
         aria-label="Open New Tab (Cmd+T / Ctrl+T)"
         onClick={onNewTab}
-        className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-white/[0.05] active:scale-95 transition-all shrink-0 ml-1 mb-1 focus-visible:ring-1 focus-visible:ring-emerald-500"
+        className="flex items-center justify-center w-8 h-8 rounded-xl text-[var(--text-secondary)] hover:text-sky-400 hover:bg-white/[0.08] active:scale-95 transition-all shrink-0 ml-1 border border-[var(--border-glass)] shadow-sm cursor-pointer"
         title="New Tab (Ctrl+T / Cmd+T)"
       >
         <Plus className="w-4 h-4" />
