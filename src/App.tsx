@@ -461,6 +461,7 @@ export default function App() {
             onNavigate={handleNavigate}
             onBack={handleBack}
             onReload={handleReload}
+            onHome={handleHome}
             onSearchEngineChange={(engine: SearchEngine) =>
               handleUpdateSettings({ defaultSearchEngine: engine })
             }

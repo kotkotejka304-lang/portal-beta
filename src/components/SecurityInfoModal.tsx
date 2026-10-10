@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ShieldCheck, Lock, ExternalLink, AlertTriangle, BookOpen, CheckCircle } from 'lucide-react';
+import { X, ShieldCheck, Lock, ExternalLink, AlertTriangle, BookOpen, CheckCircle, Info } from 'lucide-react';
 
 interface SecurityInfoModalProps {
   isOpen: boolean;
@@ -58,16 +58,33 @@ export const SecurityInfoModal: React.FC<SecurityInfoModalProps> = ({
               2. Understanding X-Frame-Options & CSP Restrictions
             </h3>
             <p className="text-slate-400">
-              When you visit popular websites such as Google, YouTube, GitHub, Twitter, or banking institutions, you will notice they block iframe embedding. Here is why:
+              When you visit popular websites such as <strong>DuckDuckGo</strong>, <strong>Discord</strong>, Google, YouTube, GitHub, Twitter, or banking portals, you will notice they block iframe embedding:
             </p>
             <div className="space-y-2 pl-2 border-l-2 border-amber-500/40 text-slate-300">
               <p>
-                <strong>Clickjacking Protection:</strong> To prevent malicious sites from overlaying invisible buttons over authenticated accounts, the web standard specifies the <code>X-Frame-Options: SAMEORIGIN</code> and <code>Content-Security-Policy: frame-ancestors &apos;self&apos;</code> HTTP headers.
+                <strong>Clickjacking Defense:</strong> To prevent external websites from secretly overlaying invisible buttons or intercepting private messages and searches, the web standard specifies <code>X-Frame-Options: SAMEORIGIN</code> (or <code>DENY</code>) and <code>Content-Security-Policy: frame-ancestors &apos;self&apos;</code> HTTP response headers.
               </p>
               <p>
-                <strong>Cross-Origin Security:</strong> By design, modern web browsers enforce these headers and reject embedding. Portal detects these restrictions and provides an immediate <strong>&ldquo;Open in New Tab&rdquo;</strong> button so you can seamlessly continue browsing.
+                <strong>Native Browser Blocking:</strong> Web browsers (Chrome, Safari, iPadOS) enforce these response headers. If an embedded iframe attempts to load them, the browser halts rendering with messages such as <em>&ldquo;duckduckgo.com refused to connect&rdquo;</em> or <em>&ldquo;discord.com refused to connect&rdquo;</em>.
+              </p>
+              <p>
+                <strong>Truthful Fallback:</strong> Portal automatically detects these known restrictions and provides an immediate <strong>&ldquo;Open in new tab (outside Portal)&rdquo;</strong> button so you can seamlessly access the site in standard browsing context.
               </p>
             </div>
+          </section>
+
+          {/* Section 2b: Browser Cross-Origin Technical Boundaries */}
+          <section className="space-y-2">
+            <h3 className="font-semibold text-slate-100 text-sm flex items-center gap-2">
+              <Info className="w-4 h-4 text-emerald-400" />
+              3. Technical Limitation: Cross-Origin Isolation
+            </h3>
+            <p className="text-slate-400">
+              By design of the W3C Same-Origin Policy, JavaScript executing in a parent web application cannot inspect cross-origin iframe DOM trees or intercept internal network responses. When an iframe is blocked by <code>X-Frame-Options</code>, browsers typically fire the generic DOM <code>load</code> event on the error document without exposing error details to parent scripts.
+            </p>
+            <p className="text-slate-400 text-xs">
+              Portal never claims a site has successfully loaded when its contents cannot be verified. Instead, Portal uses pro-active domain detection, connection timeouts, and persistent fallback actions.
+            </p>
           </section>
 
           {/* Section 3: Safe for School-Issued iPads and Chromebooks */}

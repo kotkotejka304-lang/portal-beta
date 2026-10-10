@@ -299,7 +299,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({
                 Web Viewer Security & Embedding Notice
               </h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Portal loads content in standard sandboxed iframes. Major consumer platforms (Google, YouTube, GitHub, Twitter) enforce strict HTTP headers (<code>X-Frame-Options</code> and CSP <code>frame-ancestors</code>) to prevent framing. When a site blocks framing, Portal detects it honestly and provides an external launch button.
+                Portal loads content in standard sandboxed iframes. Major consumer platforms (Discord, DuckDuckGo, Google, YouTube, GitHub) enforce strict HTTP headers (<code>X-Frame-Options: SAMEORIGIN/DENY</code> and CSP <code>frame-ancestors</code>) to prevent framing. When a site blocks framing, Portal detects it honestly and provides an external launch button.
               </p>
             </div>
           </div>
@@ -310,6 +310,67 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({
           >
             Learn How It Works
           </button>
+        </section>
+
+        {/* Diagnostics & Controlled Test Suite */}
+        <section className="p-4 rounded-xl bg-[#171a21] border border-white/[0.06] space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              Controlled Testing Suite
+            </h3>
+            <span className="text-[11px] text-slate-500">Verify embeddable vs blocked behavior</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+            <button
+              type="button"
+              onClick={() => onNavigate('portal://test-embeddable')}
+              className="p-2.5 rounded-lg bg-[#0e1014] hover:bg-[#1a1e27] border border-emerald-500/30 text-left transition-colors group"
+            >
+              <div className="text-xs font-semibold text-emerald-300 flex items-center justify-between">
+                <span>Embeddable Test</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5">Test verified in-frame content</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigate('portal://test-blocked')}
+              className="p-2.5 rounded-lg bg-[#0e1014] hover:bg-[#1a1e27] border border-amber-500/30 text-left transition-colors group"
+            >
+              <div className="text-xs font-semibold text-amber-300 flex items-center justify-between">
+                <span>Blocked Test</span>
+                <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5">Controlled X-Frame denial</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigate('https://discord.com')}
+              className="p-2.5 rounded-lg bg-[#0e1014] hover:bg-[#1a1e27] border border-white/[0.08] text-left transition-colors group"
+            >
+              <div className="text-xs font-semibold text-slate-200 flex items-center justify-between">
+                <span>Test Discord</span>
+                <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-400" />
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5">Enforces X-Frame: DENY</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigate('https://duckduckgo.com')}
+              className="p-2.5 rounded-lg bg-[#0e1014] hover:bg-[#1a1e27] border border-white/[0.08] text-left transition-colors group"
+            >
+              <div className="text-xs font-semibold text-slate-200 flex items-center justify-between">
+                <span>Test DuckDuckGo</span>
+                <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-400" />
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5">Enforces SAMEORIGIN</p>
+            </button>
+          </div>
         </section>
 
         {/* Keyboard Navigation Shortcuts Bar */}

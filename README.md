@@ -129,9 +129,10 @@ vercel --prod
   - Use search filter → verify instant filtering.
   - Click "Clear All History" and confirm → verify history resets cleanly.
 - [x] **Embed Diagnostics & CSP Handling**:
-  - Navigate to `https://google.com` or `https://github.com` → verify the Unsupported-Site screen explains that `X-Frame-Options: SAMEORIGIN` prohibits in-page embedding.
-  - Click "Open in New Browser Tab" → verify site opens in native browser tab.
-  - Navigate to `OpenStreetMap` or `PhET Simulations` → verify interactive site loads smoothly inside the sandboxed iframe.
+  - Navigate to `https://duckduckgo.com` or `https://discord.com` → verify the Unsupported-Site screen explains that `X-Frame-Options` and CSP prohibit in-page embedding (preventing `refused to connect` browser errors).
+  - Click "Open in New Tab (outside Portal)" → verify site opens in native browser tab where restrictions do not apply.
+  - Navigate to `portal://test-blocked` → verify the controlled embedding denial test page with simulated HTTP headers.
+  - Navigate to `portal://test-embeddable`, `OpenStreetMap`, or `PhET Simulations` → verify interactive site loads smoothly inside the sandboxed iframe.
 
 ### iPad Safari & iOS Touch Testing
 - [x] **Touch Target Sizes**: All navigation buttons, tabs, close icons, and omnibox controls meet or exceed 44×44px touch ergonomics.
