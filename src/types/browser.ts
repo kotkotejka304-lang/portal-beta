@@ -48,6 +48,7 @@ export interface BrowserSettings {
   autoHttps: boolean;
   newTabBehavior: 'welcome' | 'blank';
   enableDiagnostics: boolean;
+  loadTimeoutSeconds: number;
 }
 
 export interface CuratedSite {

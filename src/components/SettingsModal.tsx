@@ -10,6 +10,7 @@ import {
   RotateCcw,
   Smartphone,
   Monitor,
+  Clock,
 } from 'lucide-react';
 import { BrowserSettings, SearchEngine } from '../types/browser';
 
@@ -156,6 +157,48 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 }`}
               />
             </button>
+          </div>
+
+          {/* Loading Timeout Duration */}
+          <div className="space-y-2 py-3 border-t border-white/[0.06]">
+            <div className="space-y-0.5">
+              <div className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                Frame Connection Timeout Duration
+              </div>
+              <p className="text-xs text-slate-400">
+                How long Portal waits for an embedded site before displaying the connection timeout screen. Adjust higher for slower networks or complex redirects.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+              {[
+                { sec: 8, label: '8 seconds', desc: 'Fast networks' },
+                { sec: 12, label: '12 seconds', desc: 'Balanced (Default)' },
+                { sec: 18, label: '18 seconds', desc: 'Slow / Mobile' },
+                { sec: 25, label: '25 seconds', desc: 'High latency' },
+              ].map((opt) => {
+                const currentTimeout = settings.loadTimeoutSeconds || 12;
+                const isSelected = currentTimeout === opt.sec;
+                return (
+                  <button
+                    key={opt.sec}
+                    type="button"
+                    onClick={() => onUpdateSettings({ loadTimeoutSeconds: opt.sec })}
+                    className={`p-2 rounded-xl border text-left text-xs transition-all flex flex-col justify-between ${
+                      isSelected
+                        ? 'bg-emerald-500/10 border-emerald-500 text-emerald-300'
+                        : 'bg-[#171a21] border-white/[0.06] text-slate-300 hover:border-white/[0.2]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full font-semibold">
+                      <span>{opt.label}</span>
+                      {isSelected && <Check className="w-3 h-3 text-emerald-400" />}
+                    </div>
+                    <span className="text-[10px] text-slate-500 mt-1">{opt.desc}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Device Layout Mode (Desktop vs iPad Safari touch frame) */}

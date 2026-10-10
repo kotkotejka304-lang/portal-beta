@@ -149,7 +149,7 @@ vercel --prod
 1. **Cross-Origin Iframe Restrictions (Same-Origin Policy)**:
    - A client-side web application cannot inspect the internal DOM or monitor link clicks inside a cross-origin iframe. If a user clicks a link inside an embedded Wikipedia page, the outer address bar cannot detect the internal path change without browser extension or browser engine privileges.
 2. **CSP and X-Frame-Options**:
-   - Modern websites (e.g. Google, YouTube, Reddit, Facebook, GitHub, banking portals) deliberately send `X-Frame-Options: SAMEORIGIN` or CSP `frame-ancestors 'self'` to prevent clickjacking. A pure web application cannot override these headers without an external proxy (which is prohibited for school network policy reasons). Portal handles this honestly with explicit explanations and an external tab fallback.
+   - Modern websites (e.g. Discord, DuckDuckGo, Google, YouTube, Reddit, Facebook, GitHub, banking portals) deliberately send `X-Frame-Options: SAMEORIGIN/DENY` or CSP `frame-ancestors 'self'` to prevent clickjacking. A pure web application cannot override these headers without an external proxy (which is prohibited for school network policy reasons). Portal handles this honestly with explicit explanations and an external tab fallback.
 
 ### Suggested Improvements for Version 2
 1. **PWA Offline Mode & Service Worker**:
@@ -160,3 +160,36 @@ vercel --prod
    - Organize tabs into color-coded school subject folders (e.g., "Physics Lab", "History Essay", "Math Homework").
 4. **Custom Start Screen Widgets**:
    - Allow students to customize the start page with quick notes, study timers, and calculator widgets.
+
+---
+
+## 7. Cross-Device Diagnostic Testing Guide
+
+When a website (such as `growden.io`) works on one computer but fails or times out on another device, use this 4-step diagnostic checklist to isolate the exact cause:
+
+### Test 1: Check Portal & Configurable Timeout
+- **Action**: In Portal Settings (`⚙️`), check the **Frame Connection Timeout Duration**.
+- **Observation**: If set to 8s or 12s on a slow device or cellular hotspot, cold SSL negotiation and DNS lookups may exceed this limit.
+- **Verification**: Increase timeout to **18s** or **25s**, or click **Wait Longer (+12s)** on the timeout screen. If the site loads after extending, the issue was latency, not an embedding prohibition.
+
+### Test 2: Check Direct Native Browser Loading
+- **Action**: Open the destination URL directly in a new native browser tab outside Portal (`https://growden.io`).
+- **Observation**:
+  - Does the site load immediately?
+  - Does Cloudflare show an interstitial challenge or "Checking your browser before accessing..."?
+  - If a Cloudflare challenge appears, it requires user interaction and may fail or hang silently inside an embedded iframe.
+
+### Test 3: Check Browser Privacy Shields & Tracking Prevention
+- **Action**: Check browser security settings on the failing device (e.g. Safari "Prevent Cross-Site Tracking", Brave Shields, or Chrome Third-Party Cookie blocking).
+- **Observation**:
+  - Strict tracking prevention can block third-party frame storage and assets.
+  - Open DevTools Console (`F12` or `Cmd+Option+I`) and look for red errors:
+    - `Mixed Content`: Trying to load `http://` inside an `https://` Vercel deployment.
+    - `Third-party cookie blocked`: Affecting session cookies.
+    - `X-Frame-Options` or `CSP frame-ancestors`: Server rejected framing.
+
+### Test 4: Check Network Firewalls & Wi-Fi Filtering
+- **Action**: Connect both devices to the same network (or switch the failing device to a mobile hotspot).
+- **Observation**:
+  - School Wi-Fi networks, router content filters, or corporate VPNs frequently block unclassified domains, gaming sites, or web proxies.
+  - If it fails on school Wi-Fi but loads on mobile data, the school network filter is blocking the destination.

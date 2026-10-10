@@ -21,6 +21,7 @@ export const DEFAULT_SETTINGS: BrowserSettings = {
   autoHttps: true,
   newTabBehavior: 'welcome',
   enableDiagnostics: true,
+  loadTimeoutSeconds: 12,
 };
 
 const DEFAULT_BOOKMARKS: Bookmark[] = [

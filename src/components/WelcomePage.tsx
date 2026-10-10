@@ -370,6 +370,23 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({
               </div>
               <p className="text-[11px] text-slate-400 mt-0.5">Enforces SAMEORIGIN</p>
             </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigate('https://growden.io')}
+              className="p-2.5 rounded-lg bg-[#0e1014] hover:bg-[#1a1e27] border border-emerald-500/30 text-left transition-colors group sm:col-span-2 lg:col-span-4"
+            >
+              <div className="text-xs font-semibold text-emerald-300 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                  Test growden.io (Cross-Device Latency Test)
+                </span>
+                <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-400" />
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Tests embed compatibility and device network latency handling
+              </p>
+            </button>
           </div>
         </section>
 

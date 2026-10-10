@@ -201,6 +201,19 @@ export function resolveInputToUrl(
           isInternal: false,
         };
       }
+
+      // If running over HTTPS (such as Vercel), upgrade http:// to https://
+      // to prevent browser mixed-content blocking on external domains
+      if (
+        typeof window !== 'undefined' &&
+        window.location.protocol === 'https:' &&
+        parsed.protocol === 'http:' &&
+        parsed.hostname !== 'localhost' &&
+        parsed.hostname !== '127.0.0.1'
+      ) {
+        parsed.protocol = 'https:';
+      }
+
       return { url: parsed.href, isInternal: false };
     } catch {
       return {
@@ -211,14 +224,15 @@ export function resolveInputToUrl(
     }
   }
 
-  // Domain pattern with or without path/port (e.g. "duckduckgo.com", "discord.com", "sub.domain.org/path", "localhost:3000")
+  // Domain pattern with or without path/port (e.g. "duckduckgo.com", "discord.com", "growden.io", "sub.domain.org/path", "localhost:3000")
   const domainPattern = /^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(:\d+)?(\/.*)?$/;
   const localhostPattern = /^localhost(:\d+)?(\/.*)?$/;
   const ipAddressPattern = /^(\d{1,3}\.){3}\d{1,3}(:\d+)?(\/.*)?$/;
 
   if (domainPattern.test(trimmed) || localhostPattern.test(trimmed) || ipAddressPattern.test(trimmed)) {
-    // Automatically prepend https:// (or http:// for localhost)
-    const protocol = localhostPattern.test(trimmed) ? 'http://' : 'https://';
+    // Automatically prepend https:// (or http:// for localhost/127.0.0.1)
+    const isLocal = localhostPattern.test(trimmed) || trimmed.startsWith('127.0.0.1');
+    const protocol = isLocal ? 'http://' : 'https://';
     try {
       const fullUrl = `${protocol}${trimmed}`;
       const parsed = new URL(fullUrl);
