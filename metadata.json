@@ -1,0 +1,7 @@
+{
+  "name": "Portal Web Browser",
+  "description": "A sleek, sandboxed web browser interface with multi-tab navigation, bookmarks, browsing history, and embed diagnostics built for desktop and iPad.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
